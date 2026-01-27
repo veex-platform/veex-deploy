@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Backend: Registry + Cloud Build + OTA
   veex-platform:
@@ -14,9 +12,8 @@ services:
       - STORAGE_DIR=/root/data/artifacts
       - TEMPLATES_DIR=/app/veex-templates
       - ALLOWED_ORIGINS=*
-      # Database Configuration (PostgreSQL Support)
-      - DB_TYPE=${DB_TYPE:-sqlite} # options: sqlite, postgres
-      - DATABASE_URL=${DATABASE_URL:-} # e.g. postgres://user:pass@host:5432/db?sslmode=disable
+      - DB_TYPE=${DB_TYPE:-sqlite}
+      - DATABASE_URL=${DATABASE_URL:-}
     networks:
       - veex-network
     healthcheck:
@@ -32,20 +29,24 @@ services:
     expose:
       - "80"
     environment:
-      - VITE_REGISTRY_URL=${VITE_REGISTRY_URL:-http://registry.veexplatform.com/api/v1}
+      # Intra-cluster priority: works thanks to runtime injection script
+      - VITE_REGISTRY_URL=http://veex-platform:8080/api/v1
     depends_on:
       - veex-platform
     networks:
       - veex-network
 
-  # Frontend: Admin Dashboard
+  # Frontend: Admin Portal
   veex-admin:
     image: ghcr.io/veex-platform/veex-admin:latest
     restart: unless-stopped
     expose:
       - "3000"
     environment:
-      - NEXT_PUBLIC_REGISTRY_URL=${NEXT_PUBLIC_REGISTRY_URL:-http://registry.veexplatform.com/api/v1}
+      # Intra-cluster priority for Server-Side Rendering (SSR)
+      - REGISTRY_URL_INTERNAL=http://veex-platform:8080/api/v1
+      # Fallback/Public URL for browser-side fetches
+      - NEXT_PUBLIC_REGISTRY_URL=http://registry.veexplatform.com/api/v1
     depends_on:
       - veex-platform
     networks:
@@ -65,18 +66,6 @@ services:
       - veex-platform
     networks:
       - veex-network
-  # Optional: External Database (Production)
-  # postgres:
-  #   image: postgres:15-alpine
-  #   restart: unless-stopped
-  #   environment:
-  #     - POSTGRES_USER=veex
-  #     - POSTGRES_PASSWORD=veex_pass
-  #     - POSTGRES_DB=veexplatform
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - veex-network
 
 networks:
   veex-network:
@@ -85,5 +74,3 @@ networks:
 volumes:
   data:
     driver: local
-  # postgres_data:
-  #   driver: local
