@@ -43,9 +43,9 @@ services:
     image: ghcr.io/veex-platform/veex-admin:latest
     restart: unless-stopped
     expose:
-      - "80"
+      - "3000"
     environment:
-      - VITE_REGISTRY_URL=${VITE_REGISTRY_URL:-http://registry.veexplatform.com/api/v1}
+      - NEXT_PUBLIC_REGISTRY_URL=${NEXT_PUBLIC_REGISTRY_URL:-http://registry.veexplatform.com/api/v1}
     depends_on:
       - veex-platform
     networks:
