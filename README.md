@@ -11,10 +11,15 @@ cd docker/all-in-one
 docker-compose up -d
 ```
 
-Access (Unified Gateway):
-- **Studio** (Visual Editor): http://localhost/
-- **Platform** (Registry API): http://localhost/api/v1
-- **Dashboard** (Telemetry): http://localhost/dashboard
+Access (Unified Gateway - Virtual Hosting):
+- **Studio** (Visual Editor): `http://studio.yourdomain.com`
+- **Platform** (Registry API): `http://registry.yourdomain.com`
+
+> [!TIP]
+> **Custom Domain Setup**:
+> 1. Edit `docker/all-in-one/nginx.conf` and replace `veexplatform.com` with your domain.
+> 2. Run with your domain as an environment variable:
+>    `VITE_REGISTRY_URL=http://registry.yourdomain.com/api/v1 docker-compose up -d`
 
 ### Production Kubernetes
 
@@ -50,9 +55,10 @@ helm install veex ./veex-chart
 
 ```mermaid
 graph TD
-    User([Industrial User]) -- "Port 80" --> Gateway[Industrial Gateway<br/>Nginx Proxy]
-    Gateway -- "/" --> Studio[VEEX Studio<br/>Visual Editor]
-    Gateway -- "/api/v1" --> Platform[VEEX Platform<br/>Cloud Services]
+    User([Industrial User]) -- "studio.veexplatform.com" --> Gateway[Industrial Gateway<br/>Nginx Proxy]
+    User -- "registry.veexplatform.com" --> Gateway
+    Gateway -- "Virtual Host 1" --> Studio[VEEX Studio<br/>Visual Editor]
+    Gateway -- "Virtual Host 2" --> Platform[VEEX Platform<br/>Cloud Services]
     Platform -- "Persistence" --> DB[(SQLite)]
 ```
 

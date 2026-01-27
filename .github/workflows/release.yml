@@ -1,0 +1,28 @@
+name: Release Archive
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Archive
+        run: |
+          zip -r veex-release-bundle.zip . -x "*.git*" "node_modules/*" ".github/*"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: veex-release-bundle.zip
+          body: "Official Industrial Assets for VEEX Ecosystem. Version ${{ github.ref_name }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
