@@ -21,6 +21,19 @@ Access (Unified Gateway - Virtual Hosting):
 > 2. Run with your domain as an environment variable:
 >    `VITE_REGISTRY_URL=http://registry.yourdomain.com/api/v1 docker-compose up -d`
 
+### 2. External Database (PostgreSQL)
+For production-grade scalability, VEEX supports external PostgreSQL databases.
+
+**Setup**:
+1. Set the following environment variables:
+   - `DB_TYPE=postgres`
+   - `DATABASE_URL=postgres://user:password@host:5432/dbname?sslmode=disable`
+2. Ensure the PostgreSQL instance is reachable from the VEEX services.
+
+```bash
+DB_TYPE=postgres DATABASE_URL=postgres://... docker-compose up -d
+```
+
 ### Production Kubernetes
 
 ```bash
