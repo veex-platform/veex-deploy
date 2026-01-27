@@ -13,6 +13,7 @@ docker-compose up -d
 
 Access (Unified Gateway - Virtual Hosting):
 - **Studio** (Visual Editor): `http://studio.yourdomain.com`
+- **Admin** (Dashboard): `http://admin.yourdomain.com`
 - **Platform** (Registry API): `http://registry.yourdomain.com`
 
 > [!TIP]
@@ -20,6 +21,43 @@ Access (Unified Gateway - Virtual Hosting):
 > 1. Edit `docker/all-in-one/nginx.conf` and replace `veexplatform.com` with your domain.
 > 2. Run with your domain as an environment variable:
 >    `VITE_REGISTRY_URL=http://registry.yourdomain.com/api/v1 docker-compose up -d`
+
+## Configuration
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and customize:
+
+```bash
+cd docker/all-in-one
+cp .env.example .env
+# Edit .env with your configuration
+docker-compose up -d
+```
+
+**Key Configuration Options**:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_REGISTRY_URL` | `http://registry.veexplatform.com/api/v1` | Registry URL for Studio and Admin |
+| `DB_TYPE` | `sqlite` | Database type (`sqlite` or `postgres`) |
+| `DATABASE_URL` | - | PostgreSQL connection string (if `DB_TYPE=postgres`) |
+
+**Example Configurations**:
+
+```bash
+# Local Development
+VITE_REGISTRY_URL=http://localhost:80/api/v1
+
+# Production Cloud
+VITE_REGISTRY_URL=https://registry.veexplatform.com/api/v1
+
+# On-Premise Production
+VITE_REGISTRY_URL=https://registry.example.com/api/v1
+DB_TYPE=postgres
+DATABASE_URL=postgres://veex:password@postgres:5432/veexplatform?sslmode=require
+```
+
 
 ### 2. External Database (PostgreSQL)
 For production-grade scalability, VEEX supports external PostgreSQL databases.
