@@ -16,11 +16,18 @@ services:
       - DATABASE_URL=${DATABASE_URL:-}
     networks:
       - veex-network
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: veex.platform
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/v1/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
+    depends_on:
+      - fluent-bit
 
   # Frontend: Visual Studio Editor
   veex-studio:
@@ -29,12 +36,17 @@ services:
     expose:
       - "80"
     environment:
-      # Intra-cluster priority: works thanks to runtime injection script
-      - VITE_REGISTRY_URL=http://veex-platform:8080/api/v1
+      - VITE_REGISTRY_URL=https://registry.veexplatform.com/api/v1
     depends_on:
       - veex-platform
+      - fluent-bit
     networks:
       - veex-network
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: veex.studio
 
   # Frontend: Admin Portal
   veex-admin:
@@ -43,14 +55,18 @@ services:
     expose:
       - "3000"
     environment:
-      # Intra-cluster priority for Server-Side Rendering (SSR)
       - REGISTRY_URL_INTERNAL=http://veex-platform:8080/api/v1
-      # Fallback/Public URL for browser-side fetches
-      - NEXT_PUBLIC_REGISTRY_URL=http://registry.veexplatform.com/api/v1
+      - NEXT_PUBLIC_REGISTRY_URL=${NEXT_PUBLIC_REGISTRY_URL:-http://localhost/api/v1}
     depends_on:
       - veex-platform
+      - fluent-bit
     networks:
       - veex-network
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: veex.admin
 
   # Unified Entrypoint (All-in-One Gateway)
   veex-gateway:
@@ -64,6 +80,67 @@ services:
       - veex-studio
       - veex-admin
       - veex-platform
+      - fluent-bit
+    networks:
+      - veex-network
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: veex.gateway
+
+  # Observability: OpenSearch for log storage
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: opensearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    networks:
+      - veex-network
+
+  # Observability: OpenSearch Dashboards
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.0
+    container_name: opensearch-dashboards
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    depends_on:
+      - opensearch
+    networks:
+      - veex-network
+
+  # Observability: Fluent Bit for log collection
+  fluent-bit:
+    image: fluent/fluent-bit:2.2
+    container_name: fluent-bit
+    restart: unless-stopped
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    depends_on:
+      - opensearch
     networks:
       - veex-network
 
@@ -73,4 +150,6 @@ networks:
 
 volumes:
   data:
+    driver: local
+  opensearch-data:
     driver: local
