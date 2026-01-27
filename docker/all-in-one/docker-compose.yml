@@ -56,7 +56,7 @@ services:
       - "3000"
     environment:
       - REGISTRY_URL_INTERNAL=http://veex-platform:8080/api/v1
-      - NEXT_PUBLIC_REGISTRY_URL=${NEXT_PUBLIC_REGISTRY_URL:-http://localhost/api/v1}
+      - NEXT_PUBLIC_REGISTRY_URL=${NEXT_PUBLIC_REGISTRY_URL:-https://registry.veexplatform.com/api/v1}
     depends_on:
       - veex-platform
       - fluent-bit
@@ -98,6 +98,7 @@ services:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_INSTALL_DEMO_CONFIG=true
       - DISABLE_SECURITY_PLUGIN=true
     ulimits:
       memlock:

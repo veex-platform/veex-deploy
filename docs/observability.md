@@ -16,6 +16,24 @@ OpenSearch Dashboards (visualization)
 Users/Admins
 ```
 
+## ⚠️ Critical Pre-requisites
+
+### **REQUIRED: Configure vm.max_map_count on Droplet**
+OpenSearch **will NOT start** without this system configuration. Run on the **droplet host**:
+
+```bash
+# Temporary (until reboot)
+sudo sysctl -w vm.max_map_count=262144
+
+# Permanent (persists after reboot) - RECOMMENDED
+echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+
+# Verify
+cat /proc/sys/vm/max_map_count
+# Should output: 262144
+```
+
 ## Services Added
 
 ### 1. **OpenSearch**
