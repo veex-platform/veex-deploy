@@ -1,5 +1,4 @@
 services:
-  # Backend: Registry + Cloud Build + OTA
   veex-platform:
     image: ghcr.io/veex-platform/veex-platform:latest
     restart: unless-stopped
@@ -11,7 +10,7 @@ services:
       - PORT=8080
       - STORAGE_DIR=/root/data/artifacts
       - TEMPLATES_DIR=/app/veex-templates
-      - ALLOWED_ORIGINS=*
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
       - DB_TYPE=${DB_TYPE:-sqlite}
       - DATABASE_URL=${DATABASE_URL:-}
     networks:
@@ -29,14 +28,13 @@ services:
     depends_on:
       - fluent-bit
 
-  # Frontend: Visual Studio Editor
   veex-studio:
     image: ghcr.io/veex-platform/veex-studio:latest
     restart: unless-stopped
     expose:
       - "80"
     environment:
-      - VITE_REGISTRY_URL=${VITE_REGISTRY_URL:-http://localhost/api/v1}
+      - VITE_REGISTRY_URL=${VITE_REGISTRY_URL:-https://registry.veexplatform.com/api/v1}
     depends_on:
       - veex-platform
       - fluent-bit
@@ -48,7 +46,6 @@ services:
         fluentd-address: localhost:24224
         tag: veex.studio
 
-  # Frontend: Admin Portal
   veex-admin:
     image: ghcr.io/veex-platform/veex-admin:latest
     restart: unless-stopped
@@ -68,7 +65,6 @@ services:
         fluentd-address: localhost:24224
         tag: veex.admin
 
-  # Unified Entrypoint (All-in-One Gateway)
   veex-gateway:
     image: nginx:alpine
     container_name: veex-gateway

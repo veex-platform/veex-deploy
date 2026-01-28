@@ -12,15 +12,11 @@ docker-compose up -d
 ```
 
 Access (Unified Gateway - Virtual Hosting):
-- **Studio** (Visual Editor): `http://studio.yourdomain.com`
-- **Admin** (Dashboard): `http://admin.yourdomain.com`
-- **Platform** (Registry API): `http://registry.yourdomain.com`
+- **Studio** (Visual Editor): `https://studio.veexplatform.com`
+- **Admin** (Dashboard): `https://admin.veexplatform.com`
+- **Registry** (Platform API): `https://registry.veexplatform.com`
 
-> [!TIP]
-> **Custom Domain Setup**:
-> 1. Edit `docker/all-in-one/nginx.conf` and replace `veexplatform.com` with your domain.
-> 2. Run with your domain as an environment variable:
->    `VITE_REGISTRY_URL=http://registry.yourdomain.com/api/v1 docker-compose up -d`
+For Cloudflare DNS + SSL setup, see **[docker/all-in-one/CLOUDFLARE.md](docker/all-in-one/CLOUDFLARE.md)**.
 
 ## Configuration
 
@@ -39,7 +35,8 @@ docker-compose up -d
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VITE_REGISTRY_URL` | `http://registry.veexplatform.com/api/v1` | Registry URL for Studio and Admin |
+| `VITE_REGISTRY_URL` | `https://registry.veexplatform.com/api/v1` | Registry URL for Studio (browser) |
+| `NEXT_PUBLIC_REGISTRY_URL` | `https://registry.veexplatform.com/api/v1` | Registry URL for Admin (browser) |
 | `DB_TYPE` | `sqlite` | Database type (`sqlite` or `postgres`) |
 | `DATABASE_URL` | - | PostgreSQL connection string (if `DB_TYPE=postgres`) |
 
@@ -71,6 +68,10 @@ For production-grade scalability, VEEX supports external PostgreSQL databases.
 ```bash
 DB_TYPE=postgres DATABASE_URL=postgres://... docker-compose up -d
 ```
+
+### Production with Cloudflare (admin, studio, registry)
+
+See **[docker/all-in-one/CLOUDFLARE.md](docker/all-in-one/CLOUDFLARE.md)** for DNS, SSL at Cloudflare (Flexible), and `docker compose up -d`.
 
 ### Production Kubernetes
 
