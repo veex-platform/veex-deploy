@@ -36,7 +36,7 @@ services:
     expose:
       - "80"
     environment:
-      - VITE_REGISTRY_URL=https://registry.veexplatform.com/api/v1
+      - VITE_REGISTRY_URL=${VITE_REGISTRY_URL:-http://localhost/api/v1}
     depends_on:
       - veex-platform
       - fluent-bit
