@@ -1,0 +1,63 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: veex-gateway
+  namespace: default
+  annotations:
+    # NGINX Ingress Controller annotations
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m" # Allow larger uploads for artifacts
+    
+    # CORS Configuration (Handled by backend middleware, but good to have fallback)
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://studio.veexplatform.com, https://admin.veexplatform.com"
+
+spec:
+  tls:
+  - hosts:
+    - registry.veexplatform.com
+    - admin.veexplatform.com
+    - studio.veexplatform.com
+    secretName: veex-tls-secret # Assumes you have a cert-manager or secret created
+
+  rules:
+  # 1. Backend API & Registry
+  - host: registry.veexplatform.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: veex-platform # Must match your Service name
+            port:
+              number: 8080
+
+  # 2. Admin Console (The one causing issues)
+  - host: admin.veexplatform.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: veex-admin # Must match your Service name
+            port:
+              number: 80
+
+  # 3. Studio (Visual Editor)
+  - host: studio.veexplatform.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: veex-studio # Must match your Service name
+            port:
+              number: 80
+
+  # defaultBackend is NOT defined here to prevent "catch-all" behavior.
+  # If a request comes for "unknown.veexplatform.com", it will hit the Ingress Controller's default 404,
+  # preventing the "Studio taking over Admin" issue.
