@@ -127,7 +127,7 @@ graph TD
 ### Minimum (All-in-One)
 - Docker 20.10+
 - Docker Compose 2.0+
-- 2GB RAM
+- 1GB RAM
 - 10GB Storage
 
 ### Production (Kubernetes)

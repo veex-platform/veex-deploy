@@ -15,18 +15,11 @@ services:
       - DATABASE_URL=${DATABASE_URL:-}
     networks:
       - veex-network
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: localhost:24224
-        tag: veex.platform
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/v1/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
-    depends_on:
-      - fluent-bit
 
   veex-studio:
     image: ghcr.io/veex-platform/veex-studio:latest
@@ -37,14 +30,8 @@ services:
       - VITE_REGISTRY_URL=${VITE_REGISTRY_URL:-https://registry.veexplatform.com/api/v1}
     depends_on:
       - veex-platform
-      - fluent-bit
     networks:
       - veex-network
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: localhost:24224
-        tag: veex.studio
 
   veex-admin:
     image: ghcr.io/veex-platform/veex-admin:latest
@@ -56,14 +43,8 @@ services:
       - NEXT_PUBLIC_REGISTRY_URL=${NEXT_PUBLIC_REGISTRY_URL:-https://registry.veexplatform.com/api/v1}
     depends_on:
       - veex-platform
-      - fluent-bit
     networks:
       - veex-network
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: localhost:24224
-        tag: veex.admin
 
   veex-gateway:
     image: nginx:alpine
@@ -76,68 +57,36 @@ services:
       - veex-studio
       - veex-admin
       - veex-platform
-      - fluent-bit
     networks:
       - veex-network
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: localhost:24224
-        tag: veex.gateway
 
-  # Observability: OpenSearch for log storage
-  opensearch:
-    image: opensearchproject/opensearch:2.11.0
-    container_name: opensearch
+  # Observability: Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
     restart: unless-stopped
-    environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - DISABLE_INSTALL_DEMO_CONFIG=true
-      - DISABLE_SECURITY_PLUGIN=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
+    ports:
+      - "9090:9090"
     volumes:
-      - opensearch-data:/usr/share/opensearch/data
-    ports:
-      - "9200:9200"
-      - "9600:9600"
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
     networks:
       - veex-network
 
-  # Observability: OpenSearch Dashboards
-  opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:2.11.0
-    container_name: opensearch-dashboards
+  # Observability: Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
     restart: unless-stopped
     ports:
-      - "5601:5601"
+      - "3000:3000"
     environment:
-      - OPENSEARCH_HOSTS=http://opensearch:9200
-      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
-    depends_on:
-      - opensearch
-    networks:
-      - veex-network
-
-  # Observability: Fluent Bit for log collection
-  fluent-bit:
-    image: fluent/fluent-bit:2.2
-    container_name: fluent-bit
-    restart: unless-stopped
-    ports:
-      - "24224:24224"
-      - "24224:24224/udp"
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     volumes:
-      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
-    depends_on:
-      - opensearch
+      - grafana-data:/var/lib/grafana
     networks:
       - veex-network
 
@@ -148,5 +97,7 @@ networks:
 volumes:
   data:
     driver: local
-  opensearch-data:
+  prometheus-data:
+    driver: local
+  grafana-data:
     driver: local
