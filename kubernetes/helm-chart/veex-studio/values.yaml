@@ -1,0 +1,29 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/veex-platform/veex-studio
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: studio.veexplatform.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+istio:
+  enabled: false
+  gateway: "istio-gateway"
+
+studio:
+  registryUrl: "https://registry.veexplatform.com/api/v1"

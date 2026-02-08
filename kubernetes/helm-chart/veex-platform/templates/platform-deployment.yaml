@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "veex-platform.fullname" . }}-platform
+  labels:
+    component: platform
+spec:
+  replicas: {{ .Values.platform.replicaCount }}
+  selector:
+    matchLabels:
+      component: platform
+  template:
+    metadata:
+      labels:
+        component: platform
+    spec:
+      containers:
+        - name: platform
+          image: "{{ .Values.image.repository }}/veex-platform:{{ .Values.image.tag }}"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: DB_TYPE
+              value: "postgres"
+            - name: DATABASE_URL
+              value: "postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ .Release.Name }}-postgresql:5432/{{ .Values.postgresql.auth.database }}?sslmode=disable"
+            - name: ALLOWED_ORIGINS
+              value: {{ .Values.platform.env.ALLOWED_ORIGINS | quote }}
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http

@@ -1,0 +1,23 @@
+name: veex-platform
+description: |
+  A charmed bundle for deploying the VEEX Industrial IoT Platform.
+series: jammy
+applications:
+  veex-platform:
+    charm: ch:veex-platform
+    num_units: 1
+    options:
+      db_type: postgres
+  veex-studio:
+    charm: ch:veex-studio
+    num_units: 1
+  veex-admin:
+    charm: ch:veex-admin
+    num_units: 1
+  postgresql:
+    charm: ch:postgresql-k8s
+    num_units: 1
+relations:
+  - ["veex-platform:db", "postgresql:database"]
+  - ["veex-studio:platform", "veex-platform:api"]
+  - ["veex-admin:platform", "veex-platform:api"]

@@ -1,0 +1,30 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/veex-platform/veex-admin
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: admin.veexplatform.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+istio:
+  enabled: false
+  gateway: "istio-gateway"
+
+admin:
+  registryUrl: "https://registry.veexplatform.com/api/v1"
+  registryUrlInternal: "http://veex-platform:8080/api/v1"
